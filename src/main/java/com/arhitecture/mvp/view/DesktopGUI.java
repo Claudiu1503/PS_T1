@@ -10,19 +10,21 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.stage.Stage;
 
+
 public class DesktopGUI extends Application {
     @Override
     public void start(Stage stage) {
         TabPane tabPane = new TabPane();
 
-        Tab actorTab = new Tab("Actors", new ActorPresenter().getView());
-        Tab directorTab = new Tab("Directors", new DirectorPresenter().getView());
-        Tab screenwriterTab = new Tab("Screenwriters", new ScreenwriterPresenter().getView());
-        Tab movieTab = new Tab("Movies", new MoviePresenter().getView());
+        Tab actorTab = new Tab("Actors", new ActorPresenter(stage).getView());
+        Tab directorTab = new Tab("Directors", new DirectorPresenter(stage).getView());
+        Tab screenwriterTab = new Tab("Screenwriters", new ScreenwriterPresenter(stage).getView());
+        Tab movieTab = new Tab("Movies", new MoviePresenter(stage).getView());
 
         tabPane.getTabs().addAll(actorTab, directorTab, screenwriterTab, movieTab);
 
         Scene scene = new Scene(tabPane, 800, 600);
+        scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
         stage.setTitle("Film Production Management");
         stage.setScene(scene);
         stage.show();

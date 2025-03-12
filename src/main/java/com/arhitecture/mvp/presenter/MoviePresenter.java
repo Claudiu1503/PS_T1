@@ -8,8 +8,10 @@ import com.arhitecture.mvp.model.repository.MovieDAO;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -23,36 +25,15 @@ public class MoviePresenter {
 
     private MovieDAO movieDAO;
 
-    public MoviePresenter() {
+    public MoviePresenter(Stage primaryStage) {
         movieDAO = new MovieDAO();
         initialize();
+        Scene scene = new Scene(view, 800, 600);
+        scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
+        primaryStage.setScene(scene);
+        primaryStage.setTitle("Movie Management");
+        primaryStage.show();
     }
-
-//    private void initialize() {
-//        movieTableView = new TableView<>();
-//        TableColumn<Movie, Integer> idColumn = new TableColumn<>("ID");
-//        idColumn.setCellValueFactory(cellData -> cellData.getValue().idProperty().asObject());
-//        TableColumn<Movie, String> titleColumn = new TableColumn<>("Title");
-//        titleColumn.setCellValueFactory(cellData -> cellData.getValue().titleProperty());
-//        TableColumn<Movie, Integer> yearColumn = new TableColumn<>("Year");
-//        yearColumn.setCellValueFactory(cellData -> cellData.getValue().yearProperty().asObject());
-//        TableColumn<Movie, String> actorsColumn = new TableColumn<>("Actors");
-//        actorsColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getActorsAsString()));
-//
-//        movieTableView.getColumns().addAll(idColumn, titleColumn, yearColumn, actorsColumn);
-//
-//        addButton = new Button("Add Movie");
-//        updateButton = new Button("Update Movie");
-//        deleteButton = new Button("Delete Movie");
-//
-//        addButton.setOnAction(e -> handleAddMovie());
-//        updateButton.setOnAction(e -> handleUpdateMovie());
-//        deleteButton.setOnAction(e -> handleDeleteMovie());
-//
-//        view = new VBox(10, movieTableView, addButton, updateButton, deleteButton);
-//        loadMovies();
-//    }
-
     private void initialize() {
         movieTableView = new TableView<>();
         TableColumn<Movie, Integer> idColumn = new TableColumn<>("ID");
@@ -79,9 +60,9 @@ public class MoviePresenter {
         deleteButton.setOnAction(e -> handleDeleteMovie());
 
         view = new VBox(10, movieTableView, addButton, updateButton, deleteButton);
+        view.setStyle("-fx-padding: 20px; -fx-background-color: #ffffff;");
         loadMovies();
     }
-
 
     private void loadMovies() {
         try {
@@ -171,8 +152,6 @@ public class MoviePresenter {
         });
     }
 
-
-
     private void handleUpdateMovie() {
         Movie selectedMovie = movieTableView.getSelectionModel().getSelectedItem();
         if (selectedMovie != null) {
@@ -230,6 +209,15 @@ public class MoviePresenter {
 
             dialog.showAndWait().ifPresent(movie -> {
                 try {
+                    // Ensure director and screenwriter are saved in the database
+                    if (movie.getDirector().getId() == 0) {
+                        // Save director and get generated ID
+                        movie.getDirector().setId(movieDAO.saveDirector(movie.getDirector()));
+                    }
+                    if (movie.getScreenwriter().getId() == 0) {
+                        // Save screenwriter and get generated ID
+                        movie.getScreenwriter().setId(movieDAO.saveScreenwriter(movie.getScreenwriter()));
+                    }
                     movieDAO.updateMovie(movie);
                     loadMovies();
                 } catch (SQLException e) {

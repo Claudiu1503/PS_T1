@@ -4,8 +4,10 @@ import com.arhitecture.mvp.model.Screenwriter;
 import com.arhitecture.mvp.model.repository.ScreenwriterDAO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -19,9 +21,14 @@ public class ScreenwriterPresenter {
 
     private ScreenwriterDAO screenwriterDAO;
 
-    public ScreenwriterPresenter() {
+    public ScreenwriterPresenter(Stage primaryStage) {
         screenwriterDAO = new ScreenwriterDAO();
         initialize();
+        Scene scene = new Scene(view, 800, 600);
+        scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
+        primaryStage.setScene(scene);
+        primaryStage.setTitle("Screenwriter Management");
+        primaryStage.show();
     }
 
     private void initialize() {
