@@ -99,4 +99,15 @@ public class Movie {
     public void setActors(ObservableList<Actor> actors) {
         this.actors = actors;
     }
+
+    public String getActorsAsString() {
+        StringBuilder actorsString = new StringBuilder();
+        for (Actor actor : actors) {
+            if (actorsString.length() > 0) {
+                actorsString.append(", ");
+            }
+            actorsString.append(actor.getName());
+        }
+        return actorsString.toString();
+    }
 }
