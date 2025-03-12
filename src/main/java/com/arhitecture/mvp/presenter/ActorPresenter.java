@@ -31,6 +31,8 @@ public class ActorPresenter {
         primaryStage.show();
     }
 
+    private Button refreshButton;
+
     private void initialize() {
         actorTableView = new TableView<>();
         TableColumn<Actor, Integer> idColumn = new TableColumn<>("ID");
@@ -43,12 +45,14 @@ public class ActorPresenter {
         addButton = new Button("Add Actor");
         updateButton = new Button("Update Actor");
         deleteButton = new Button("Delete Actor");
+        refreshButton = new Button("Refresh");
 
         addButton.setOnAction(e -> handleAddActor());
         updateButton.setOnAction(e -> handleUpdateActor());
         deleteButton.setOnAction(e -> handleDeleteActor());
+        refreshButton.setOnAction(e -> loadActors());
 
-        view = new VBox(10, actorTableView, addButton, updateButton, deleteButton);
+        view = new VBox(10, actorTableView, addButton, updateButton, deleteButton, refreshButton);
         loadActors();
     }
 

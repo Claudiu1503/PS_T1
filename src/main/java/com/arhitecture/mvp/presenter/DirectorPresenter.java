@@ -32,6 +32,8 @@ public class DirectorPresenter {
         primaryStage.show();
     }
 
+    private Button refreshButton;
+
     private void initialize() {
         directorTableView = new TableView<>();
         TableColumn<Director, Integer> idColumn = new TableColumn<>("ID");
@@ -44,12 +46,14 @@ public class DirectorPresenter {
         addButton = new Button("Add Director");
         updateButton = new Button("Update Director");
         deleteButton = new Button("Delete Director");
+        refreshButton = new Button("Refresh");
 
         addButton.setOnAction(e -> handleAddDirector());
         updateButton.setOnAction(e -> handleUpdateDirector());
         deleteButton.setOnAction(e -> handleDeleteDirector());
+        refreshButton.setOnAction(e -> loadDirectors());
 
-        view = new VBox(10, directorTableView, addButton, updateButton, deleteButton);
+        view = new VBox(10, directorTableView, addButton, updateButton, deleteButton, refreshButton);
         loadDirectors();
     }
 

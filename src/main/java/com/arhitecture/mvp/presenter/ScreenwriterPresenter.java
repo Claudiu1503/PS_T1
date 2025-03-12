@@ -31,6 +31,8 @@ public class ScreenwriterPresenter {
         primaryStage.show();
     }
 
+    private Button refreshButton;
+
     private void initialize() {
         screenwriterTableView = new TableView<>();
         TableColumn<Screenwriter, Integer> idColumn = new TableColumn<>("ID");
@@ -43,12 +45,14 @@ public class ScreenwriterPresenter {
         addButton = new Button("Add Screenwriter");
         updateButton = new Button("Update Screenwriter");
         deleteButton = new Button("Delete Screenwriter");
+        refreshButton = new Button("Refresh");
 
         addButton.setOnAction(e -> handleAddScreenwriter());
         updateButton.setOnAction(e -> handleUpdateScreenwriter());
         deleteButton.setOnAction(e -> handleDeleteScreenwriter());
+        refreshButton.setOnAction(e -> loadScreenwriters());
 
-        view = new VBox(10, screenwriterTableView, addButton, updateButton, deleteButton);
+        view = new VBox(10, screenwriterTableView, addButton, updateButton, deleteButton, refreshButton);
         loadScreenwriters();
     }
 

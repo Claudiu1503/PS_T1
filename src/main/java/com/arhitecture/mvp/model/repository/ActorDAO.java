@@ -24,12 +24,34 @@ public class ActorDAO {
         return actors;
     }
 
-    public void addActor(Actor actor) throws SQLException {
-        String query = "INSERT INTO actors (name) VALUES (?)";
+    public Actor findActorByName(String name) throws SQLException {
+        String query = "SELECT * FROM actors WHERE name = ?";
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, name);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                Actor actor = new Actor();
+                actor.setId(resultSet.getInt("id"));
+                actor.setName(resultSet.getString("name"));
+                return actor;
+            }
+        }
+        return null;
+    }
+
+    public int addActor(Actor actor) throws SQLException {
+        String query = "INSERT INTO actors (name) VALUES (?)";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, actor.getName());
             statement.executeUpdate();
+            ResultSet generatedKeys = statement.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                return generatedKeys.getInt(1);
+            } else {
+                throw new SQLException("Creating actor failed, no ID obtained.");
+            }
         }
     }
 
@@ -44,12 +66,6 @@ public class ActorDAO {
     }
 
     public void deleteActor(int id) throws SQLException {
-//        String query = "DELETE FROM actors WHERE id = ?";
-//        try (Connection connection = DatabaseConnection.getConnection();
-//             PreparedStatement statement = connection.prepareStatement(query)) {
-//            statement.setInt(1, id);
-//            statement.executeUpdate();
-//        }
 
         String deleteMovieActorsQuery = "DELETE FROM movie_actors WHERE actor_id = ?";
         String deleteActorQuery = "DELETE FROM actors WHERE id = ?";

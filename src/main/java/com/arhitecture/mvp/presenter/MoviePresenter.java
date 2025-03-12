@@ -4,6 +4,7 @@ import com.arhitecture.mvp.model.Actor;
 import com.arhitecture.mvp.model.Director;
 import com.arhitecture.mvp.model.Movie;
 import com.arhitecture.mvp.model.Screenwriter;
+import com.arhitecture.mvp.model.repository.ActorDAO;
 import com.arhitecture.mvp.model.repository.MovieDAO;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -24,9 +25,11 @@ public class MoviePresenter {
     private VBox view;
 
     private MovieDAO movieDAO;
+    private ActorDAO actorDAO;
 
     public MoviePresenter(Stage primaryStage) {
         movieDAO = new MovieDAO();
+        actorDAO = new ActorDAO(); // Initialize actorDAO
         initialize();
         Scene scene = new Scene(view, 800, 600);
         scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
@@ -34,6 +37,8 @@ public class MoviePresenter {
         primaryStage.setTitle("Movie Management");
         primaryStage.show();
     }
+    private Button refreshButton;
+
     private void initialize() {
         movieTableView = new TableView<>();
         TableColumn<Movie, Integer> idColumn = new TableColumn<>("ID");
@@ -54,13 +59,14 @@ public class MoviePresenter {
         addButton = new Button("Add Movie");
         updateButton = new Button("Update Movie");
         deleteButton = new Button("Delete Movie");
+        refreshButton = new Button("Refresh");
 
         addButton.setOnAction(e -> handleAddMovie());
         updateButton.setOnAction(e -> handleUpdateMovie());
         deleteButton.setOnAction(e -> handleDeleteMovie());
+        refreshButton.setOnAction(e -> loadMovies());
 
-        view = new VBox(10, movieTableView, addButton, updateButton, deleteButton);
-        view.setStyle("-fx-padding: 20px; -fx-background-color: #ffffff;");
+        view = new VBox(10, movieTableView, addButton, updateButton, deleteButton, refreshButton);
         loadMovies();
     }
 
@@ -152,82 +158,91 @@ public class MoviePresenter {
         });
     }
 
-    private void handleUpdateMovie() {
-        Movie selectedMovie = movieTableView.getSelectionModel().getSelectedItem();
-        if (selectedMovie != null) {
-            Dialog<Movie> dialog = new Dialog<>();
-            dialog.setTitle("Update Movie");
-            dialog.setHeaderText("Update Movie Details");
+private void handleUpdateMovie() {
+    Movie selectedMovie = movieTableView.getSelectionModel().getSelectedItem();
+    if (selectedMovie != null) {
+        Dialog<Movie> dialog = new Dialog<>();
+        dialog.setTitle("Update Movie");
+        dialog.setHeaderText("Update Movie Details");
 
-            // Set the button types
-            ButtonType updateButtonType = new ButtonType("Update", ButtonBar.ButtonData.OK_DONE);
-            dialog.getDialogPane().getButtonTypes().addAll(updateButtonType, ButtonType.CANCEL);
+        // Set the button types
+        ButtonType updateButtonType = new ButtonType("Update", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(updateButtonType, ButtonType.CANCEL);
 
-            // Create the fields for movie details
-            TextField titleField = new TextField(selectedMovie.getTitle());
-            TextField yearField = new TextField(String.valueOf(selectedMovie.getYear()));
-            TextField directorField = new TextField(selectedMovie.getDirector() != null ? selectedMovie.getDirector().getName() : "");
-            TextField screenwriterField = new TextField(selectedMovie.getScreenwriter() != null ? selectedMovie.getScreenwriter().getName() : "");
-            TextField actorsField = new TextField(selectedMovie.getActorsAsString());
+        // Create the fields for movie details
+        TextField titleField = new TextField(selectedMovie.getTitle());
+        TextField yearField = new TextField(String.valueOf(selectedMovie.getYear()));
+        TextField directorField = new TextField(selectedMovie.getDirector() != null ? selectedMovie.getDirector().getName() : "");
+        TextField screenwriterField = new TextField(selectedMovie.getScreenwriter() != null ? selectedMovie.getScreenwriter().getName() : "");
+        TextField actorsField = new TextField(selectedMovie.getActorsAsString());
 
-            VBox content = new VBox(10, titleField, yearField, directorField, screenwriterField, actorsField);
-            dialog.getDialogPane().setContent(content);
+        VBox content = new VBox(10, titleField, yearField, directorField, screenwriterField, actorsField);
+        dialog.getDialogPane().setContent(content);
 
-            dialog.setResultConverter(dialogButton -> {
-                if (dialogButton == updateButtonType) {
-                    selectedMovie.setTitle(titleField.getText());
-                    selectedMovie.setYear(Integer.parseInt(yearField.getText()));
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == updateButtonType) {
+                selectedMovie.setTitle(titleField.getText());
+                selectedMovie.setYear(Integer.parseInt(yearField.getText()));
 
-                    // Update director, screenwriter, and actors
-                    Director director = new Director();
-                    director.setName(directorField.getText().isEmpty() ? "Default Director" : directorField.getText());
-                    selectedMovie.setDirector(director);
+                // Update director, screenwriter, and actors
+                Director director = new Director();
+                director.setName(directorField.getText().isEmpty() ? "Default Director" : directorField.getText());
+                selectedMovie.setDirector(director);
 
-                    Screenwriter screenwriter = new Screenwriter();
-                    screenwriter.setName(screenwriterField.getText().isEmpty() ? "Default Screenwriter" : screenwriterField.getText());
-                    selectedMovie.setScreenwriter(screenwriter);
+                Screenwriter screenwriter = new Screenwriter();
+                screenwriter.setName(screenwriterField.getText().isEmpty() ? "Default Screenwriter" : screenwriterField.getText());
+                selectedMovie.setScreenwriter(screenwriter);
 
-                    ObservableList<Actor> actors = FXCollections.observableArrayList();
-                    if (!actorsField.getText().isEmpty()) {
-                        String[] actorNames = actorsField.getText().split(",");
-                        for (String name : actorNames) {
-                            Actor actor = new Actor();
-                            actor.setName(name.trim());
+                ObservableList<Actor> actors = FXCollections.observableArrayList();
+                if (!actorsField.getText().isEmpty()) {
+                    String[] actorNames = actorsField.getText().split(",");
+                    for (String name : actorNames) {
+                        Actor actor;
+                        try {
+                            actor = actorDAO.findActorByName(name.trim());
+                            if (actor == null) {
+                                actor = new Actor();
+                                actor.setName(name.trim());
+                                actor.setId(actorDAO.addActor(actor)); // Save new actor and get ID
+                            }
                             actors.add(actor);
+                        } catch (SQLException e) {
+                            e.printStackTrace();
                         }
-                    } else {
-                        Actor defaultActor = new Actor();
-                        defaultActor.setName("Default Actor");
-                        actors.add(defaultActor);
                     }
-                    selectedMovie.setActors(actors);
-
-                    return selectedMovie;
+                } else {
+                    Actor defaultActor = new Actor();
+                    defaultActor.setName("Default Actor");
+                    actors.add(defaultActor);
                 }
-                return null;
-            });
+                selectedMovie.setActors(actors);
 
-            dialog.showAndWait().ifPresent(movie -> {
-                try {
-                    // Ensure director and screenwriter are saved in the database
-                    if (movie.getDirector().getId() == 0) {
-                        // Save director and get generated ID
-                        movie.getDirector().setId(movieDAO.saveDirector(movie.getDirector()));
-                    }
-                    if (movie.getScreenwriter().getId() == 0) {
-                        // Save screenwriter and get generated ID
-                        movie.getScreenwriter().setId(movieDAO.saveScreenwriter(movie.getScreenwriter()));
-                    }
-                    movieDAO.updateMovie(movie);
-                    loadMovies();
-                } catch (SQLException e) {
-                    e.printStackTrace();
+                return selectedMovie;
+            }
+            return null;
+        });
+
+        dialog.showAndWait().ifPresent(movie -> {
+            try {
+                // Ensure director and screenwriter are saved in the database
+                if (movie.getDirector().getId() == 0) {
+                    // Save director and get generated ID
+                    movie.getDirector().setId(movieDAO.saveDirector(movie.getDirector()));
                 }
-            });
-        } else {
-            showAlert("No Selection", "No Movie Selected", "Please select a movie in the table.");
-        }
+                if (movie.getScreenwriter().getId() == 0) {
+                    // Save screenwriter and get generated ID
+                    movie.getScreenwriter().setId(movieDAO.saveScreenwriter(movie.getScreenwriter()));
+                }
+                movieDAO.updateMovie(movie);
+                loadMovies();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+    } else {
+        showAlert("No Selection", "No Movie Selected", "Please select a movie in the table.");
     }
+}
 
     private void handleDeleteMovie() {
         Movie selectedMovie = movieTableView.getSelectionModel().getSelectedItem();
