@@ -44,12 +44,21 @@ public class ScreenwriterDAO {
         }
     }
 
-    public void deleteScreenwriter(int id) throws SQLException {
-        String query = "DELETE FROM screenwriters WHERE id = ?";
+    public void deleteScreenwriter(int screenwriterId) throws SQLException {
+        // First, delete or update related movies
+        String updateMoviesQuery = "UPDATE movies SET screenwriter_id = NULL WHERE screenwriter_id = ?";
         try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setInt(1, id);
-            statement.executeUpdate();
+             PreparedStatement updateStatement = connection.prepareStatement(updateMoviesQuery)) {
+            updateStatement.setInt(1, screenwriterId);
+            updateStatement.executeUpdate();
+        }
+
+        // Then, delete the screenwriter
+        String deleteScreenwriterQuery = "DELETE FROM screenwriters WHERE id = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement deleteStatement = connection.prepareStatement(deleteScreenwriterQuery)) {
+            deleteStatement.setInt(1, screenwriterId);
+            deleteStatement.executeUpdate();
         }
     }
 }

@@ -68,15 +68,93 @@ public class DirectorPresenter {
     }
 
     private void handleAddDirector() {
-        // Logic for adding a director
+        Dialog<Director> dialog = new Dialog<>();
+        dialog.setTitle("Add Director");
+        dialog.setHeaderText("Enter Director Details");
+
+        ButtonType addButtonType = new ButtonType("Add", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(addButtonType, ButtonType.CANCEL);
+
+        TextField nameField = new TextField();
+        nameField.setPromptText("Name");
+
+        VBox content = new VBox(10, nameField);
+        dialog.getDialogPane().setContent(content);
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == addButtonType) {
+                Director director = new Director();
+                director.setName(nameField.getText());
+                return director;
+            }
+            return null;
+        });
+
+        dialog.showAndWait().ifPresent(director -> {
+            try {
+                directorDAO.addDirector(director);
+                loadDirectors();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private void handleUpdateDirector() {
-        // Logic for updating a director
+        Director selectedDirector = directorTableView.getSelectionModel().getSelectedItem();
+        if (selectedDirector != null) {
+            Dialog<Director> dialog = new Dialog<>();
+            dialog.setTitle("Update Director");
+            dialog.setHeaderText("Update Director Details");
+
+            ButtonType updateButtonType = new ButtonType("Update", ButtonBar.ButtonData.OK_DONE);
+            dialog.getDialogPane().getButtonTypes().addAll(updateButtonType, ButtonType.CANCEL);
+
+            TextField nameField = new TextField(selectedDirector.getName());
+
+            VBox content = new VBox(10, nameField);
+            dialog.getDialogPane().setContent(content);
+
+            dialog.setResultConverter(dialogButton -> {
+                if (dialogButton == updateButtonType) {
+                    selectedDirector.setName(nameField.getText());
+                    return selectedDirector;
+                }
+                return null;
+            });
+
+            dialog.showAndWait().ifPresent(director -> {
+                try {
+                    directorDAO.updateDirector(director);
+                    loadDirectors();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            });
+        } else {
+            showAlert("No Selection", "No Director Selected", "Please select a director in the table.");
+        }
     }
 
     private void handleDeleteDirector() {
-        // Logic for deleting a director
+        Director selectedDirector = directorTableView.getSelectionModel().getSelectedItem();
+        if (selectedDirector != null) {
+            try {
+                directorDAO.deleteDirector(selectedDirector.getId());
+                loadDirectors();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else {
+            showAlert("No Selection", "No Director Selected", "Please select a director in the table.");
+        }
+    }
+    private void showAlert(String title, String header, String content) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 
     public VBox getView() {

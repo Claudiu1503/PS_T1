@@ -67,16 +67,96 @@ public class ScreenwriterPresenter {
     }
 
     private void handleAddScreenwriter() {
-        // Logic for adding a screenwriter
+        Dialog<Screenwriter> dialog = new Dialog<>();
+        dialog.setTitle("Add Screenwriter");
+        dialog.setHeaderText("Enter Screenwriter Details");
+
+        ButtonType addButtonType = new ButtonType("Add", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(addButtonType, ButtonType.CANCEL);
+
+        TextField nameField = new TextField();
+        nameField.setPromptText("Name");
+
+        VBox content = new VBox(10, nameField);
+        dialog.getDialogPane().setContent(content);
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == addButtonType) {
+                Screenwriter screenwriter = new Screenwriter();
+                screenwriter.setName(nameField.getText());
+                return screenwriter;
+            }
+            return null;
+        });
+
+        dialog.showAndWait().ifPresent(screenwriter -> {
+            try {
+                screenwriterDAO.addScreenwriter(screenwriter);
+                loadScreenwriters();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private void handleUpdateScreenwriter() {
-        // Logic for updating a screenwriter
+        Screenwriter selectedScreenwriter = screenwriterTableView.getSelectionModel().getSelectedItem();
+        if (selectedScreenwriter != null) {
+            Dialog<Screenwriter> dialog = new Dialog<>();
+            dialog.setTitle("Update Screenwriter");
+            dialog.setHeaderText("Update Screenwriter Details");
+
+            ButtonType updateButtonType = new ButtonType("Update", ButtonBar.ButtonData.OK_DONE);
+            dialog.getDialogPane().getButtonTypes().addAll(updateButtonType, ButtonType.CANCEL);
+
+            TextField nameField = new TextField(selectedScreenwriter.getName());
+
+            VBox content = new VBox(10, nameField);
+            dialog.getDialogPane().setContent(content);
+
+            dialog.setResultConverter(dialogButton -> {
+                if (dialogButton == updateButtonType) {
+                    selectedScreenwriter.setName(nameField.getText());
+                    return selectedScreenwriter;
+                }
+                return null;
+            });
+
+            dialog.showAndWait().ifPresent(screenwriter -> {
+                try {
+                    screenwriterDAO.updateScreenwriter(screenwriter);
+                    loadScreenwriters();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            });
+        } else {
+            showAlert("No Selection", "No Screenwriter Selected", "Please select a screenwriter in the table.");
+        }
     }
 
     private void handleDeleteScreenwriter() {
-        // Logic for deleting a screenwriter
+        Screenwriter selectedScreenwriter = screenwriterTableView.getSelectionModel().getSelectedItem();
+        if (selectedScreenwriter != null) {
+            try {
+                screenwriterDAO.deleteScreenwriter(selectedScreenwriter.getId());
+                loadScreenwriters();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else {
+            showAlert("No Selection", "No Screenwriter Selected", "Please select a screenwriter in the table.");
+        }
     }
+
+    private void showAlert(String title, String header, String content) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
 
     public VBox getView() {
         return view;

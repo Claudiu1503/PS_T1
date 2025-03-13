@@ -43,12 +43,21 @@ public class DirectorDAO {
         }
     }
 
-    public void deleteDirector(int id) throws SQLException {
-        String query = "DELETE FROM directors WHERE id = ?";
+    public void deleteDirector(int directorId) throws SQLException {
+        // First, delete or update related movies
+        String updateMoviesQuery = "UPDATE movies SET director_id = NULL WHERE director_id = ?";
         try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setInt(1, id);
-            statement.executeUpdate();
+             PreparedStatement updateStatement = connection.prepareStatement(updateMoviesQuery)) {
+            updateStatement.setInt(1, directorId);
+            updateStatement.executeUpdate();
+        }
+
+        // Then, delete the director
+        String deleteDirectorQuery = "DELETE FROM directors WHERE id = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement deleteStatement = connection.prepareStatement(deleteDirectorQuery)) {
+            deleteStatement.setInt(1, directorId);
+            deleteStatement.executeUpdate();
         }
     }
 }
