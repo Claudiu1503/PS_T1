@@ -7,6 +7,7 @@ public class Actor {
     private SimpleIntegerProperty id;
     private SimpleStringProperty name;
 
+
     public Actor() {
         this.id = new SimpleIntegerProperty();
         this.name = new SimpleStringProperty();

@@ -47,6 +47,55 @@ public List<Movie> getAllMovies() throws SQLException {
     }
     return movies;
 }
+    public List<Movie> getMoviesByActorId(int actorId) throws SQLException {
+        List<Movie> movies = new ArrayList<>();
+        String query = "SELECT m.* FROM movies m JOIN movie_actors ma ON m.id = ma.movie_id WHERE ma.actor_id = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, actorId);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Movie movie = new Movie();
+                movie.setId(resultSet.getInt("id"));
+                movie.setTitle(resultSet.getString("title"));
+                // Set other movie properties as needed
+                movies.add(movie);
+            }
+        }
+        return movies;
+    }
+
+    public Director getDirectorByName(String name) throws SQLException {
+        String query = "SELECT * FROM directors WHERE name = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, name);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                Director director = new Director();
+                director.setId(resultSet.getInt("id"));
+                director.setName(resultSet.getString("name"));
+                return director;
+            }
+        }
+        return null;
+    }
+
+    public Screenwriter getScreenwriterByName(String name) throws SQLException {
+        String query = "SELECT * FROM screenwriters WHERE name = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, name);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                Screenwriter screenwriter = new Screenwriter();
+                screenwriter.setId(resultSet.getInt("id"));
+                screenwriter.setName(resultSet.getString("name"));
+                return screenwriter;
+            }
+        }
+        return null;
+    }
 
     private Director getDirectorById(int id) throws SQLException {
         String query = "SELECT * FROM directors WHERE id = ?";
@@ -161,39 +210,7 @@ public List<Movie> getAllMovies() throws SQLException {
         return 0;
     }
 
-    private Director getDirectorByName(String name) throws SQLException {
-        String query = "SELECT * FROM directors WHERE name = ?";
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, name);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    Director director = new Director();
-                    director.setId(resultSet.getInt("id"));
-                    director.setName(resultSet.getString("name"));
-                    return director;
-                }
-            }
-        }
-        return null;
-    }
 
-    private Screenwriter getScreenwriterByName(String name) throws SQLException {
-        String query = "SELECT * FROM screenwriters WHERE name = ?";
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, name);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    Screenwriter screenwriter = new Screenwriter();
-                    screenwriter.setId(resultSet.getInt("id"));
-                    screenwriter.setName(resultSet.getString("name"));
-                    return screenwriter;
-                }
-            }
-        }
-        return null;
-    }
 
     private ObservableList<Actor> getActorsByMovieId(int movieId) throws SQLException {
         String query = "SELECT a.* FROM actors a JOIN movie_actors ma ON a.id = ma.actor_id WHERE ma.movie_id = ?";
