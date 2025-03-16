@@ -7,7 +7,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DirectorDAO {
+public class DirectorREPO {
     public List<Director> getAllDirectors() throws SQLException {
         List<Director> directors = new ArrayList<>();
         String query = "SELECT * FROM directors";

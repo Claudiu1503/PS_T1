@@ -1,8 +1,7 @@
 package com.arhitecture.mvp.presenter;
 
 import com.arhitecture.mvp.model.Director;
-import com.arhitecture.mvp.model.repository.DirectorDAO;
-import com.arhitecture.mvp.model.repository.DirectorDAO;
+import com.arhitecture.mvp.model.repository.DirectorREPO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
@@ -20,10 +19,10 @@ public class DirectorPresenter {
     private Button deleteButton;
     private VBox view;
 
-    private DirectorDAO directorDAO;
+    private DirectorREPO directorREPO;
 
     public DirectorPresenter(Stage primaryStage) {
-        directorDAO = new DirectorDAO();
+        directorREPO = new DirectorREPO();
         initialize();
         Scene scene = new Scene(view, 800, 600);
         scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
@@ -59,7 +58,7 @@ public class DirectorPresenter {
 
     private void loadDirectors() {
         try {
-            List<Director> directors = directorDAO.getAllDirectors();
+            List<Director> directors = directorREPO.getAllDirectors();
             ObservableList<Director> directorList = FXCollections.observableArrayList(directors);
             directorTableView.setItems(directorList);
         } catch (SQLException e) {
@@ -92,7 +91,7 @@ public class DirectorPresenter {
 
         dialog.showAndWait().ifPresent(director -> {
             try {
-                directorDAO.addDirector(director);
+                directorREPO.addDirector(director);
                 loadDirectors();
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -125,7 +124,7 @@ public class DirectorPresenter {
 
             dialog.showAndWait().ifPresent(director -> {
                 try {
-                    directorDAO.updateDirector(director);
+                    directorREPO.updateDirector(director);
                     loadDirectors();
                 } catch (SQLException e) {
                     e.printStackTrace();
@@ -140,7 +139,7 @@ public class DirectorPresenter {
         Director selectedDirector = directorTableView.getSelectionModel().getSelectedItem();
         if (selectedDirector != null) {
             try {
-                directorDAO.deleteDirector(selectedDirector.getId());
+                directorREPO.deleteDirector(selectedDirector.getId());
                 loadDirectors();
             } catch (SQLException e) {
                 e.printStackTrace();

@@ -4,8 +4,8 @@ import com.arhitecture.mvp.model.Actor;
 import com.arhitecture.mvp.model.Director;
 import com.arhitecture.mvp.model.Movie;
 import com.arhitecture.mvp.model.Screenwriter;
-import com.arhitecture.mvp.model.repository.ActorDAO;
-import com.arhitecture.mvp.model.repository.MovieDAO;
+import com.arhitecture.mvp.model.repository.ActorREPO;
+import com.arhitecture.mvp.model.repository.MovieREPO;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -35,12 +35,12 @@ public class MoviePresenter {
     private Button resetButton;
     private VBox view;
 
-    private MovieDAO movieDAO;
-    private ActorDAO actorDAO;
+    private MovieREPO movieREPO;
+    private ActorREPO actorREPO;
 
     public MoviePresenter(Stage primaryStage) {
-        movieDAO = new MovieDAO();
-        actorDAO = new ActorDAO(); // Initialize actorDAO
+        movieREPO = new MovieREPO();
+        actorREPO = new ActorREPO(); // Initialize actorDAO
         initialize();
         Scene scene = new Scene(view, 800, 600);
         scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
@@ -52,7 +52,7 @@ public class MoviePresenter {
     public ObservableList<Movie> getMoviesByActor(int actorId) {
         ObservableList<Movie> movies = FXCollections.observableArrayList();
         try {
-            List<Movie> movieList = movieDAO.getMoviesByActorId(actorId);
+            List<Movie> movieList = movieREPO.getMoviesByActorId(actorId);
             movies.addAll(movieList);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -141,7 +141,7 @@ public class MoviePresenter {
 
     private void loadMovies() {
         try {
-            List<Movie> movies = movieDAO.getAllMovies();
+            List<Movie> movies = movieREPO.getAllMovies();
             ObservableList<Movie> movieList = FXCollections.observableArrayList(movies);
             movieTableView.setItems(movieList);
         } catch (SQLException e) {
@@ -157,7 +157,7 @@ public class MoviePresenter {
 
         dialog.showAndWait().ifPresent(name -> {
             try {
-                Actor actor = actorDAO.findActorByName(name);
+                Actor actor = actorREPO.findActorByName(name);
                 if (actor != null) {
                     ObservableList<Movie> movies = getMoviesByActor(actor.getId());
                     movieTableView.setItems(movies);
@@ -213,19 +213,19 @@ public class MoviePresenter {
                 movie.setCategory(categoryComboBox.getValue());
 
                 try {
-                    Director director = movieDAO.getDirectorByName(directorField.getText());
+                    Director director = movieREPO.getDirectorByName(directorField.getText());
                     if (director == null) {
                         director = new Director();
                         director.setName(directorField.getText());
-                        director.setId(movieDAO.saveDirector(director));
+                        director.setId(movieREPO.saveDirector(director));
                     }
                     movie.setDirector(director);
 
-                    Screenwriter screenwriter = movieDAO.getScreenwriterByName(screenwriterField.getText());
+                    Screenwriter screenwriter = movieREPO.getScreenwriterByName(screenwriterField.getText());
                     if (screenwriter == null) {
                         screenwriter = new Screenwriter();
                         screenwriter.setName(screenwriterField.getText());
-                        screenwriter.setId(movieDAO.saveScreenwriter(screenwriter));
+                        screenwriter.setId(movieREPO.saveScreenwriter(screenwriter));
                     }
                     movie.setScreenwriter(screenwriter);
 
@@ -233,18 +233,18 @@ public class MoviePresenter {
                     if (!actorsField.getText().isEmpty()) {
                         String[] actorNames = actorsField.getText().split(",");
                         for (String name : actorNames) {
-                            Actor actor = actorDAO.findActorByName(name.trim());
+                            Actor actor = actorREPO.findActorByName(name.trim());
                             if (actor == null) {
                                 actor = new Actor();
                                 actor.setName(name.trim());
-                                actor.setId(actorDAO.addActor(actor));
+                                actor.setId(actorREPO.addActor(actor));
                             }
                             actors.add(actor);
                         }
                     }
                     movie.setActors(actors);
 
-                    movieDAO.addMovie(movie);
+                    movieREPO.addMovie(movie);
                     loadMovies();
                 } catch (SQLException e) {
                     e.printStackTrace();
@@ -286,19 +286,19 @@ public class MoviePresenter {
                     selectedMovie.setCategory(categoryComboBox.getValue());
 
                     try {
-                        Director director = movieDAO.getDirectorByName(directorField.getText());
+                        Director director = movieREPO.getDirectorByName(directorField.getText());
                         if (director == null) {
                             director = new Director();
                             director.setName(directorField.getText());
-                            director.setId(movieDAO.saveDirector(director));
+                            director.setId(movieREPO.saveDirector(director));
                         }
                         selectedMovie.setDirector(director);
 
-                        Screenwriter screenwriter = movieDAO.getScreenwriterByName(screenwriterField.getText());
+                        Screenwriter screenwriter = movieREPO.getScreenwriterByName(screenwriterField.getText());
                         if (screenwriter == null) {
                             screenwriter = new Screenwriter();
                             screenwriter.setName(screenwriterField.getText());
-                            screenwriter.setId(movieDAO.saveScreenwriter(screenwriter));
+                            screenwriter.setId(movieREPO.saveScreenwriter(screenwriter));
                         }
                         selectedMovie.setScreenwriter(screenwriter);
 
@@ -306,18 +306,18 @@ public class MoviePresenter {
                         if (!actorsField.getText().isEmpty()) {
                             String[] actorNames = actorsField.getText().split(",");
                             for (String name : actorNames) {
-                                Actor actor = actorDAO.findActorByName(name.trim());
+                                Actor actor = actorREPO.findActorByName(name.trim());
                                 if (actor == null) {
                                     actor = new Actor();
                                     actor.setName(name.trim());
-                                    actor.setId(actorDAO.addActor(actor));
+                                    actor.setId(actorREPO.addActor(actor));
                                 }
                                 actors.add(actor);
                             }
                         }
                         selectedMovie.setActors(actors);
 
-                        movieDAO.updateMovie(selectedMovie);
+                        movieREPO.updateMovie(selectedMovie);
                         loadMovies();
                     } catch (SQLException e) {
                         e.printStackTrace();
@@ -338,7 +338,7 @@ public class MoviePresenter {
         Movie selectedMovie = movieTableView.getSelectionModel().getSelectedItem();
         if (selectedMovie != null) {
             try {
-                movieDAO.deleteMovie(selectedMovie.getId());
+                movieREPO.deleteMovie(selectedMovie.getId());
                 loadMovies();
             } catch (SQLException e) {
                 e.printStackTrace();

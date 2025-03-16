@@ -1,7 +1,7 @@
 package com.arhitecture.mvp.presenter;
 
 import com.arhitecture.mvp.model.Actor;
-import com.arhitecture.mvp.model.repository.ActorDAO;
+import com.arhitecture.mvp.model.repository.ActorREPO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
@@ -19,10 +19,10 @@ public class ActorPresenter {
     private Button deleteButton;
     private VBox view;
 
-    private ActorDAO actorDAO;
+    private ActorREPO actorREPO;
 
     public ActorPresenter(Stage primaryStage) {
-        actorDAO = new ActorDAO();
+        actorREPO = new ActorREPO();
         initialize();
         Scene scene = new Scene(view, 800, 600);
         scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
@@ -58,7 +58,7 @@ public class ActorPresenter {
 
     private void loadActors() {
         try {
-            List<Actor> actors = actorDAO.getAllActors();
+            List<Actor> actors = actorREPO.getAllActors();
             ObservableList<Actor> actorList = FXCollections.observableArrayList(actors);
             actorTableView.setItems(actorList);
         } catch (SQLException e) {
@@ -76,7 +76,7 @@ public class ActorPresenter {
             Actor actor = new Actor();
             actor.setName(name);
             try {
-                actorDAO.addActor(actor);
+                actorREPO.addActor(actor);
                 loadActors();
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -95,7 +95,7 @@ public class ActorPresenter {
             dialog.showAndWait().ifPresent(name -> {
                 selectedActor.setName(name);
                 try {
-                    actorDAO.updateActor(selectedActor);
+                    actorREPO.updateActor(selectedActor);
                     loadActors();
                 } catch (SQLException e) {
                     e.printStackTrace();
@@ -110,7 +110,7 @@ public class ActorPresenter {
         Actor selectedActor = actorTableView.getSelectionModel().getSelectedItem();
         if (selectedActor != null) {
             try {
-                actorDAO.deleteActor(selectedActor.getId());
+                actorREPO.deleteActor(selectedActor.getId());
                 loadActors();
             } catch (SQLException e) {
                 e.printStackTrace();

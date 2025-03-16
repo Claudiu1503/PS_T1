@@ -7,7 +7,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ActorDAO {
+public class ActorREPO {
     public List<Actor> getAllActors() throws SQLException {
         List<Actor> actors = new ArrayList<>();
         String query = "SELECT * FROM actors";

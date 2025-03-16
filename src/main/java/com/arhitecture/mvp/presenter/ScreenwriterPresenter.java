@@ -1,7 +1,7 @@
 package com.arhitecture.mvp.presenter;
 
 import com.arhitecture.mvp.model.Screenwriter;
-import com.arhitecture.mvp.model.repository.ScreenwriterDAO;
+import com.arhitecture.mvp.model.repository.ScreenwriterREPO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
@@ -19,10 +19,10 @@ public class ScreenwriterPresenter {
     private Button deleteButton;
     private VBox view;
 
-    private ScreenwriterDAO screenwriterDAO;
+    private ScreenwriterREPO screenwriterREPO;
 
     public ScreenwriterPresenter(Stage primaryStage) {
-        screenwriterDAO = new ScreenwriterDAO();
+        screenwriterREPO = new ScreenwriterREPO();
         initialize();
         Scene scene = new Scene(view, 800, 600);
         scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
@@ -58,7 +58,7 @@ public class ScreenwriterPresenter {
 
     private void loadScreenwriters() {
         try {
-            List<Screenwriter> screenwriters = screenwriterDAO.getAllScreenwriters();
+            List<Screenwriter> screenwriters = screenwriterREPO.getAllScreenwriters();
             ObservableList<Screenwriter> screenwriterList = FXCollections.observableArrayList(screenwriters);
             screenwriterTableView.setItems(screenwriterList);
         } catch (SQLException e) {
@@ -91,7 +91,7 @@ public class ScreenwriterPresenter {
 
         dialog.showAndWait().ifPresent(screenwriter -> {
             try {
-                screenwriterDAO.addScreenwriter(screenwriter);
+                screenwriterREPO.addScreenwriter(screenwriter);
                 loadScreenwriters();
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -124,7 +124,7 @@ public class ScreenwriterPresenter {
 
             dialog.showAndWait().ifPresent(screenwriter -> {
                 try {
-                    screenwriterDAO.updateScreenwriter(screenwriter);
+                    screenwriterREPO.updateScreenwriter(screenwriter);
                     loadScreenwriters();
                 } catch (SQLException e) {
                     e.printStackTrace();
@@ -139,7 +139,7 @@ public class ScreenwriterPresenter {
         Screenwriter selectedScreenwriter = screenwriterTableView.getSelectionModel().getSelectedItem();
         if (selectedScreenwriter != null) {
             try {
-                screenwriterDAO.deleteScreenwriter(selectedScreenwriter.getId());
+                screenwriterREPO.deleteScreenwriter(selectedScreenwriter.getId());
                 loadScreenwriters();
             } catch (SQLException e) {
                 e.printStackTrace();

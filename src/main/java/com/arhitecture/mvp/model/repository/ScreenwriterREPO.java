@@ -8,7 +8,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ScreenwriterDAO {
+public class ScreenwriterREPO {
     public List<Screenwriter> getAllScreenwriters() throws SQLException {
         List<Screenwriter> screenwriters = new ArrayList<>();
         String query = "SELECT * FROM screenwriters";

@@ -12,7 +12,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MovieDAO {
+public class MovieREPO {
 
 
 public List<Movie> getAllMovies() throws SQLException {
