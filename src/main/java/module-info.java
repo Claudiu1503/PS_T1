@@ -9,4 +9,5 @@ module com.arhitecture.mvp {
     exports com.arhitecture.mvp.presenter;
     exports com.arhitecture.mvp.model;
     exports com.arhitecture.mvp.model.repository;
+    exports com.arhitecture.mvp.presenter.impl;
 }

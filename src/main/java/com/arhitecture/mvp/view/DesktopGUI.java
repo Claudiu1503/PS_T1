@@ -2,7 +2,7 @@ package com.arhitecture.mvp.view;
 
 import com.arhitecture.mvp.presenter.ActorPresenter;
 import com.arhitecture.mvp.presenter.DirectorPresenter;
-import com.arhitecture.mvp.presenter.MoviePresenter;
+import com.arhitecture.mvp.presenter.impl.MoviePresenter;
 import com.arhitecture.mvp.presenter.ScreenwriterPresenter;
 import javafx.application.Application;
 import javafx.scene.Scene;

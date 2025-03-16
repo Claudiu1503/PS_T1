@@ -26,6 +26,9 @@
     -fx-background-color: #e0e0e0;
     -fx-font-weight: bold;
 }
+.table-view .column-header {
+    -fx-background-color: #FFFFFF; /* Use a valid color value */
+}
 
 .table-row-cell {
     -fx-background-color: #ffffff;

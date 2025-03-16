@@ -1,4 +1,4 @@
-package com.arhitecture.mvp.presenter;
+package com.arhitecture.mvp.presenter.impl;
 
 import com.arhitecture.mvp.model.Actor;
 import com.arhitecture.mvp.model.Director;
@@ -6,6 +6,7 @@ import com.arhitecture.mvp.model.Movie;
 import com.arhitecture.mvp.model.Screenwriter;
 import com.arhitecture.mvp.model.repository.ActorREPO;
 import com.arhitecture.mvp.model.repository.MovieREPO;
+import com.arhitecture.mvp.presenter.MoviePresenterInterface;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -26,7 +27,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-public class MoviePresenter {
+public class MoviePresenter implements MoviePresenterInterface {
     private TableView<Movie> movieTableView;
     private Button addButton;
     private Button updateButton;
@@ -107,7 +108,8 @@ public class MoviePresenter {
         loadMovies();
     }
 
-    private void handleExportToCSV() {
+    @Override
+    public void handleExportToCSV() {
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Export to CSV");
         dialog.setHeaderText("Enter Category");
@@ -123,7 +125,7 @@ public class MoviePresenter {
         });
     }
 
-    private void handleExportToDOC() {
+    public void handleExportToDOC() {
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Export to DOC");
         dialog.setHeaderText("Enter Category");
@@ -139,7 +141,7 @@ public class MoviePresenter {
         });
     }
 
-    private void loadMovies() {
+    public void loadMovies() {
         try {
             List<Movie> movies = movieREPO.getAllMovies();
             ObservableList<Movie> movieList = FXCollections.observableArrayList(movies);
@@ -149,7 +151,7 @@ public class MoviePresenter {
         }
     }
 
-    private void handleFilterByActor() {
+    public void handleFilterByActor() {
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Filter Movies");
         dialog.setHeaderText("Enter Actor Name");
@@ -181,7 +183,7 @@ public class MoviePresenter {
 
 
 
-    private void handleAddMovie() {
+    public void handleAddMovie() {
         Dialog<Movie> dialog = new Dialog<>();
         dialog.setTitle("Add Movie");
         dialog.setHeaderText("Enter Movie Details");
@@ -257,7 +259,7 @@ public class MoviePresenter {
         dialog.showAndWait();
     }
 
-    private void handleUpdateMovie() {
+    public void handleUpdateMovie() {
         Movie selectedMovie = movieTableView.getSelectionModel().getSelectedItem();
         if (selectedMovie != null) {
             Dialog<Movie> dialog = new Dialog<>();
@@ -334,7 +336,7 @@ public class MoviePresenter {
     }
 
 
-    private void handleDeleteMovie() {
+    public void handleDeleteMovie() {
         Movie selectedMovie = movieTableView.getSelectionModel().getSelectedItem();
         if (selectedMovie != null) {
             try {
