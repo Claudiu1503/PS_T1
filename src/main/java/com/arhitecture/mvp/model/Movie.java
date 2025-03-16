@@ -12,7 +12,9 @@ public class Movie {
     private SimpleIntegerProperty year;
     private SimpleObjectProperty<Director> director;
     private SimpleObjectProperty<Screenwriter> screenwriter;
+    private SimpleStringProperty category;
     private ObservableList<Actor> actors;
+
 
     public Movie() {
         this.id = new SimpleIntegerProperty();
@@ -20,6 +22,7 @@ public class Movie {
         this.year = new SimpleIntegerProperty();
         this.director = new SimpleObjectProperty<>();
         this.screenwriter = new SimpleObjectProperty<>();
+        this.category = new SimpleStringProperty();
         this.actors = FXCollections.observableArrayList();
     }
 
@@ -32,6 +35,17 @@ public class Movie {
         this.actors = actors;
     }
 
+    public String getCategory() {
+        return category.get();
+    }
+
+    public void setCategory(String category) {
+        this.category.set(category);
+    }
+
+    public SimpleStringProperty categoryProperty() {
+        return category;
+    }
     public int getId() {
         return id.get();
     }

@@ -13,8 +13,16 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFRun;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -65,7 +73,6 @@ public class MoviePresenter {
             Director director = cellData.getValue().getDirector();
             return new SimpleStringProperty(director != null ? director.getName() : "Unknown");
         });
-
         TableColumn<Movie, String> screenwriterColumn = new TableColumn<>("Screenwriter");
         screenwriterColumn.setCellValueFactory(cellData -> {
             Screenwriter screenwriter = cellData.getValue().getScreenwriter();
@@ -74,23 +81,62 @@ public class MoviePresenter {
         TableColumn<Movie, String> actorsColumn = new TableColumn<>("Actors");
         actorsColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getActorsAsString()));
 
-        movieTableView.getColumns().addAll(idColumn, titleColumn, yearColumn, directorColumn, screenwriterColumn, actorsColumn);
+        TableColumn<Movie, String> categoryColumn = new TableColumn<>("Category");
+        categoryColumn.setCellValueFactory(cellData -> cellData.getValue().categoryProperty());
+
+        movieTableView.getColumns().addAll(idColumn, titleColumn, yearColumn, directorColumn, screenwriterColumn, actorsColumn, categoryColumn);
 
         addButton = new Button("Add Movie");
         updateButton = new Button("Update Movie");
         deleteButton = new Button("Delete Movie");
         filterButton = new Button("Filter by Actor");
         resetButton = new Button("Reset Filters");
+        Button exportCSVButton = new Button("Export to CSV");
+        Button exportDOCButton = new Button("Export to DOC");
 
         addButton.setOnAction(e -> handleAddMovie());
         updateButton.setOnAction(e -> handleUpdateMovie());
         deleteButton.setOnAction(e -> handleDeleteMovie());
         filterButton.setOnAction(e -> handleFilterByActor());
         resetButton.setOnAction(e -> loadMovies());
+        exportCSVButton.setOnAction(e -> handleExportToCSV());
+        exportDOCButton.setOnAction(e -> handleExportToDOC());
 
-        HBox buttonBox = new HBox(10, addButton, updateButton, deleteButton, filterButton, resetButton);
+        HBox buttonBox = new HBox(10, addButton, updateButton, deleteButton, filterButton, resetButton, exportCSVButton, exportDOCButton);
         view = new VBox(10, movieTableView, buttonBox);
         loadMovies();
+    }
+
+    private void handleExportToCSV() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Export to CSV");
+        dialog.setHeaderText("Enter Category");
+        dialog.setContentText("Category:");
+
+        dialog.showAndWait().ifPresent(category -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+            File file = fileChooser.showSaveDialog(view.getScene().getWindow());
+            if (file != null) {
+                exportMoviesToCSV(movieTableView.getItems(), category, file.getAbsolutePath());
+            }
+        });
+    }
+
+    private void handleExportToDOC() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Export to DOC");
+        dialog.setHeaderText("Enter Category");
+        dialog.setContentText("Category:");
+
+        dialog.showAndWait().ifPresent(category -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("DOC Files", "*.docx"));
+            File file = fileChooser.showSaveDialog(view.getScene().getWindow());
+            if (file != null) {
+                exportMoviesToDOC(movieTableView.getItems(), category, file.getAbsolutePath());
+            }
+        });
     }
 
     private void loadMovies() {
@@ -131,16 +177,18 @@ public class MoviePresenter {
         alert.setContentText(content);
         alert.showAndWait();
     }
+
+
+
+
     private void handleAddMovie() {
         Dialog<Movie> dialog = new Dialog<>();
         dialog.setTitle("Add Movie");
         dialog.setHeaderText("Enter Movie Details");
 
-        // Set the button types
         ButtonType addButtonType = new ButtonType("Add", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(addButtonType, ButtonType.CANCEL);
 
-        // Create the fields for movie details
         TextField titleField = new TextField();
         titleField.setPromptText("Title");
         TextField yearField = new TextField();
@@ -151,8 +199,10 @@ public class MoviePresenter {
         screenwriterField.setPromptText("Screenwriter");
         TextField actorsField = new TextField();
         actorsField.setPromptText("Actors (comma separated)");
+        ComboBox<String> categoryComboBox = new ComboBox<>();
+        categoryComboBox.setItems(FXCollections.observableArrayList("Action", "Comedy", "Drama", "Horror", "Sci-Fi"));
 
-        VBox content = new VBox(10, titleField, yearField, directorField, screenwriterField, actorsField);
+        VBox content = new VBox(10, titleField, yearField, directorField, screenwriterField, actorsField, categoryComboBox);
         dialog.getDialogPane().setContent(content);
 
         dialog.setResultConverter(dialogButton -> {
@@ -160,9 +210,9 @@ public class MoviePresenter {
                 Movie movie = new Movie();
                 movie.setTitle(titleField.getText());
                 movie.setYear(Integer.parseInt(yearField.getText()));
+                movie.setCategory(categoryComboBox.getValue());
 
                 try {
-                    // Check if director exists
                     Director director = movieDAO.getDirectorByName(directorField.getText());
                     if (director == null) {
                         director = new Director();
@@ -171,7 +221,6 @@ public class MoviePresenter {
                     }
                     movie.setDirector(director);
 
-                    // Check if screenwriter exists
                     Screenwriter screenwriter = movieDAO.getScreenwriterByName(screenwriterField.getText());
                     if (screenwriter == null) {
                         screenwriter = new Screenwriter();
@@ -180,7 +229,6 @@ public class MoviePresenter {
                     }
                     movie.setScreenwriter(screenwriter);
 
-                    // Check if actors exist
                     ObservableList<Actor> actors = FXCollections.observableArrayList();
                     if (!actorsField.getText().isEmpty()) {
                         String[] actorNames = actorsField.getText().split(",");
@@ -216,84 +264,76 @@ public class MoviePresenter {
             dialog.setTitle("Update Movie");
             dialog.setHeaderText("Update Movie Details");
 
-            // Set the button types
             ButtonType updateButtonType = new ButtonType("Update", ButtonBar.ButtonData.OK_DONE);
             dialog.getDialogPane().getButtonTypes().addAll(updateButtonType, ButtonType.CANCEL);
 
-            // Create the fields for movie details
             TextField titleField = new TextField(selectedMovie.getTitle());
             TextField yearField = new TextField(String.valueOf(selectedMovie.getYear()));
             TextField directorField = new TextField(selectedMovie.getDirector() != null ? selectedMovie.getDirector().getName() : "");
             TextField screenwriterField = new TextField(selectedMovie.getScreenwriter() != null ? selectedMovie.getScreenwriter().getName() : "");
             TextField actorsField = new TextField(selectedMovie.getActorsAsString());
+            ComboBox<String> categoryComboBox = new ComboBox<>();
+            categoryComboBox.setItems(FXCollections.observableArrayList("Action", "Comedy", "Drama", "Horror", "Sci-Fi"));
+            categoryComboBox.setValue(selectedMovie.getCategory());
 
-            VBox content = new VBox(10, titleField, yearField, directorField, screenwriterField, actorsField);
+            VBox content = new VBox(10, titleField, yearField, directorField, screenwriterField, actorsField, categoryComboBox);
             dialog.getDialogPane().setContent(content);
 
             dialog.setResultConverter(dialogButton -> {
                 if (dialogButton == updateButtonType) {
                     selectedMovie.setTitle(titleField.getText());
                     selectedMovie.setYear(Integer.parseInt(yearField.getText()));
+                    selectedMovie.setCategory(categoryComboBox.getValue());
 
-                    // Update director, screenwriter, and actors
-                    Director director = new Director();
-                    director.setName(directorField.getText().isEmpty() ? "Default Director" : directorField.getText());
-                    selectedMovie.setDirector(director);
+                    try {
+                        Director director = movieDAO.getDirectorByName(directorField.getText());
+                        if (director == null) {
+                            director = new Director();
+                            director.setName(directorField.getText());
+                            director.setId(movieDAO.saveDirector(director));
+                        }
+                        selectedMovie.setDirector(director);
 
-                    Screenwriter screenwriter = new Screenwriter();
-                    screenwriter.setName(screenwriterField.getText().isEmpty() ? "Default Screenwriter" : screenwriterField.getText());
-                    selectedMovie.setScreenwriter(screenwriter);
+                        Screenwriter screenwriter = movieDAO.getScreenwriterByName(screenwriterField.getText());
+                        if (screenwriter == null) {
+                            screenwriter = new Screenwriter();
+                            screenwriter.setName(screenwriterField.getText());
+                            screenwriter.setId(movieDAO.saveScreenwriter(screenwriter));
+                        }
+                        selectedMovie.setScreenwriter(screenwriter);
 
-                    ObservableList<Actor> actors = FXCollections.observableArrayList();
-                    if (!actorsField.getText().isEmpty()) {
-                        String[] actorNames = actorsField.getText().split(",");
-                        for (String name : actorNames) {
-                            Actor actor;
-                            try {
-                                actor = actorDAO.findActorByName(name.trim());
+                        ObservableList<Actor> actors = FXCollections.observableArrayList();
+                        if (!actorsField.getText().isEmpty()) {
+                            String[] actorNames = actorsField.getText().split(",");
+                            for (String name : actorNames) {
+                                Actor actor = actorDAO.findActorByName(name.trim());
                                 if (actor == null) {
                                     actor = new Actor();
                                     actor.setName(name.trim());
-                                    actor.setId(actorDAO.addActor(actor)); // Save new actor and get ID
+                                    actor.setId(actorDAO.addActor(actor));
                                 }
                                 actors.add(actor);
-                            } catch (SQLException e) {
-                                e.printStackTrace();
                             }
                         }
-                    } else {
-                        Actor defaultActor = new Actor();
-                        defaultActor.setName("Default Actor");
-                        actors.add(defaultActor);
-                    }
-                    selectedMovie.setActors(actors);
+                        selectedMovie.setActors(actors);
 
+                        movieDAO.updateMovie(selectedMovie);
+                        loadMovies();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
                     return selectedMovie;
                 }
                 return null;
             });
 
-            dialog.showAndWait().ifPresent(movie -> {
-                try {
-                    // Ensure director and screenwriter are saved in the database
-                    if (movie.getDirector().getId() == 0) {
-                        // Save director and get generated ID
-                        movie.getDirector().setId(movieDAO.saveDirector(movie.getDirector()));
-                    }
-                    if (movie.getScreenwriter().getId() == 0) {
-                        // Save screenwriter and get generated ID
-                        movie.getScreenwriter().setId(movieDAO.saveScreenwriter(movie.getScreenwriter()));
-                    }
-                    movieDAO.updateMovie(movie);
-                    loadMovies();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            });
+            dialog.showAndWait();
         } else {
             showAlert("No Selection", "No Movie Selected", "Please select a movie in the table.");
         }
     }
+
+
     private void handleDeleteMovie() {
         Movie selectedMovie = movieTableView.getSelectionModel().getSelectedItem();
         if (selectedMovie != null) {
@@ -307,6 +347,58 @@ public class MoviePresenter {
             showAlert("No Selection", "No Movie Selected", "Please select a movie in the table.");
         }
     }
+
+    public void exportMoviesToCSV(List<Movie> movies, String category, String filePath) {
+        try (FileWriter writer = new FileWriter(filePath)) {
+            writer.append("ID,Title,Year,Director,Screenwriter,Actors\n");
+            for (Movie movie : movies) {
+                if (movie.getCategory().equals(category)) {
+                    writer.append(String.valueOf(movie.getId())).append(",");
+                    writer.append(movie.getTitle()).append(",");
+                    writer.append(String.valueOf(movie.getYear())).append(",");
+                    writer.append(movie.getDirector().getName()).append(",");
+                    writer.append(movie.getScreenwriter().getName()).append(",");
+                    writer.append(movie.getActorsAsString()).append("\n");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void exportMoviesToDOC(List<Movie> movies, String category, String filePath) {
+        try (XWPFDocument document = new XWPFDocument()) {
+            XWPFParagraph paragraph = document.createParagraph();
+            XWPFRun run = paragraph.createRun();
+            run.setText("Movies in category: " + category);
+            run.addBreak();
+
+            for (Movie movie : movies) {
+                if (movie.getCategory().equals(category)) {
+                    run.setText("ID: " + movie.getId());
+                    run.addBreak();
+                    run.setText("Title: " + movie.getTitle());
+                    run.addBreak();
+                    run.setText("Year: " + movie.getYear());
+                    run.addBreak();
+                    run.setText("Director: " + movie.getDirector().getName());
+                    run.addBreak();
+                    run.setText("Screenwriter: " + movie.getScreenwriter().getName());
+                    run.addBreak();
+                    run.setText("Actors: " + movie.getActorsAsString());
+                    run.addBreak();
+                    run.addBreak();
+                }
+            }
+
+            try (FileOutputStream out = new FileOutputStream(filePath)) {
+                document.write(out);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private void showAlert(String title, String header, String content) {
         Alert alert = new Alert(Alert.AlertType.WARNING);

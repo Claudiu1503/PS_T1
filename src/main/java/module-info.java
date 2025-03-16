@@ -2,6 +2,7 @@ module com.arhitecture.mvp {
     requires javafx.controls;
     requires javafx.fxml;
     requires java.sql;
+    requires org.apache.poi.ooxml;
 
     exports com.arhitecture.mvp;
     exports com.arhitecture.mvp.view;

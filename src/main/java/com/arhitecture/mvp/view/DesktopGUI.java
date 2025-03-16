@@ -23,7 +23,7 @@ public class DesktopGUI extends Application {
 
         tabPane.getTabs().addAll(actorTab, directorTab, screenwriterTab, movieTab);
 
-        Scene scene = new Scene(tabPane, 800, 600);
+        Scene scene = new Scene(tabPane, 1200, 600);
         scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
         stage.setTitle("Film Production Management");
         stage.setScene(scene);
